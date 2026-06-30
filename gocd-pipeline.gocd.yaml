@@ -31,7 +31,13 @@ pipelines:
                       - .
                 - exec:
                     command: kubectl
-                    arguments: [apply, -f, playground-demo-k8s.yaml]
+                    arguments:
+                      - apply
+                      - -f
+                      - playground-demo-k8s.yaml
                 - exec:
                     command: kubectl
-                    arguments: [rollout, restart, deployment/playground-demo]
+                    arguments:
+                      - rollout
+                      - restart
+                      - deployment/playground-demo
