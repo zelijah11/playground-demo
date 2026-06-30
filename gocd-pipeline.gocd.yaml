@@ -1,0 +1,37 @@
+format_version: 10
+pipelines:
+  playground-demo-pipeline:
+    group: defaultGroup
+    materials:
+      git-repo:
+        git: https://github.com/zelijah11/playground-demo.git
+        branch: main
+    stages:
+      - deploy-stage:
+          jobs:
+            deploy-job:
+              tasks:
+                - exec:
+                    command: sh
+                    arguments:
+                      - -c
+                      - "docker buildx rm multiarch 2>/dev/null; mkdir -p /home/go/.buildkit && printf '[registry.\"100.125.202.56:30500\"]\n  http = true\n  insecure = true\n' > /home/go/.buildkit/buildkitd.toml && docker buildx create --name multiarch --driver docker-container --use --config /home/go/.buildkit/buildkitd.toml"
+                - exec:
+                    command: docker
+                    arguments:
+                      - buildx
+                      - build
+                      - --platform
+                      - linux/amd64,linux/arm64
+                      - --builder
+                      - multiarch
+                      - -t
+                      - 100.125.202.56:30500/playground-demo:latest
+                      - --push
+                      - .
+                - exec:
+                    command: kubectl
+                    arguments: [apply, -f, playground-demo-k8s.yaml]
+                - exec:
+                    command: kubectl
+                    arguments: [rollout, restart, deployment/playground-demo]
